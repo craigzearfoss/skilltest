@@ -3,21 +3,130 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>WHCC Hacker News Reader</title>
-    <script type="text/javascript">
-        function getStories() {
-            fetch('https://hacker-news.firebaseio.com/v0/newstories.json')
-                .then((response) => {
-                    return response.json();
-                })
-                .then((myJson) => {
-                    document.getElementById("stories").innerHTML = myJson;
-                });
-        }
-        getStories();
-    </script>
 </head>
 <body>
-    <h1>WHCC Hacker News Reader</h1>
-    <div id="stories"></div>
+<h1>WHCC Hacker News Reader</h1>
+<div>
+    <ol id="stories"></ol>
+</div>
+<script type="text/javascript">
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+
+        (function () {
+
+            const newsReader = {
+
+                currentPage: 0,
+                limit: 15,
+
+                ids: [],
+                ptr: 0,
+                endOfStories: false,
+                fetchingCount: 0,  // count of the number of stories currently being fetched
+
+                fetchStoryIds: () => {
+                    fetch('https://hacker-news.firebaseio.com/v0/newstories.json')
+                        .then((response) => {
+                            return response.json();
+                        })
+                        .then((myJson) => {
+                            //document.getElementById("stories").innerHTML = myJson;
+                            newsReader.ids = myJson;
+                            console.log('ids:', newsReader.ids);
+                            newsReader.getNextPage();
+                        });
+                },
+                fetchStory: () => {
+                    if (newsReader.ptr < newsReader.ids.length) {
+                        let id = newsReader.ids[newsReader.ptr];
+                        newsReader.ptr++;
+                        newsReader.fetchingCount++
+                        fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
+                            .then((response) => {
+                                return response.json();
+                            })
+                            .then((myJson) => {
+                                console.log('story:', myJson);
+                                newsReader.fetchingCount--;
+                                newsReader.appendStory(myJson);
+                            });
+                    } else {
+                        newsReader.endReached()
+                    }
+                },
+                getNextPage: () => {
+                    newsReader.currentPage++;
+                    for (let i=0; i<newsReader.limit; i++) {
+                        newsReader.fetchStory();
+                    }
+                },
+                appendStory: (story) => {
+                    let ts = new Date(1000 * parseInt(story.time));
+                    let time = ts.toLocaleString();
+                    const liElem = document.createElement("LI");
+                    const textNode = document.createTextNode(`${story.title} by ${story.by} (${time})`)
+                    liElem.appendChild(textNode);
+                    document.getElementById("stories").appendChild(liElem);
+                    newsReader.shouldWeLoadAnotherStory();
+                },
+                endReached: () => {
+                    console.log('display end of stories message.');
+                    newsReader.endOfStories = true;
+                    const liElem = document.createElement("LI");
+                    const textNode = document.createTextNode('END OF STORIES')
+                    liElem.appendChild(textNode);
+                    document.getElementById("stories").appendChild(liElem);
+                },
+                loadMoreCheck: () => {
+                    if (newsReader.endOfStories || (newsReader.fetchingCount > 0)) {
+                        return false;
+                    }
+
+                    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+                    const rect = document.getElementById("stories").getBoundingClientRect();
+                    //console.log(`scrollTop: ${scrollTop}, scrollHeight: ${scrollHeight}, clientHeight: ${clientHeight}`)
+                    //console.log('CLIENT: ' + (scrollTop + clientHeight) + ', UL: ' + (rect.height + rect.y))
+                    if ((scrollTop + clientHeight) >= (rect.height + rect.y)) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                },
+                shouldWeLoadAnotherStory: () => {
+                    if (newsReader.loadMoreCheck()) {
+                        newsReader.fetchStory();
+                    }
+                },
+                initialize:  () => {
+
+                    newsReader.fetchStoryIds();
+
+                    window.addEventListener("scroll", () => {
+                        if (newsReader.loadMoreCheck()) {
+                            newsReader.getNextPage();
+                            //newsReader.fetchStory();
+                        }
+                    }, {
+                        passive: true
+                    });
+
+                    window.addEventListener("resize", () => {
+                        if (newsReader.loadMoreCheck()) {
+                            newsReader.getNextPage();
+                            //newsReader.fetchStory();
+                        }
+                    }, {
+                        passive: true
+                    });
+                }
+            };
+
+            newsReader.initialize();
+
+        })();
+
+    });
+</script>
 </body>
 </html>
