@@ -49,5 +49,5 @@ I decided to use a self-invoking function to make it highly modularized so it co
 
 4. If you had more time, what would you have implemented?
 
-I would pretty up the html and styles. I'd probably use a JavaScript templater.  I'd also adjust the scrolling code so that it can be insterted a div or other html element, instead of just the body. I'd pass in the id of the element to the self-invoking function.
+I would pretty up the html and styles. I'd probably use a JavaScript templater.  I'd also adjust the scrolling code so that it can be insterted into a div or other html element, instead of just the body. I'd pass in the id of the element to the self-invoking function.
 
