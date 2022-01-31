@@ -46,6 +46,7 @@ I realized that if a page was so big that there wasn't a scroll bar it wouldn't 
 
 What was your decision making process for your code organization?
 I decided to use a self-invoking function to make it highly modularized so it could easily be plugged in anywhere and ported to other projects.
+
 4. If you had more time, what would you have implemented?
 
 I would pretty up the html and styles. I'd probably use a JavaScript templater.  I'd also adjust the scrolling code so that it can be insterted a div or other html element, instead of just the body. I'd pass in the id of the element to the self-invoking function.
